@@ -85,4 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
     addEvent(document.getElementById('input-b'), 'touch', pressB);
     addEvent(document.getElementById('input-x'), 'touch', pressX);
     addEvent(document.getElementById('input-y'), 'touch', pressY);
+
+    if (isEmbedded()) {
+        document.querySelector('.menuback a').style.display = 'none';
+    }
+
+    function isEmbedded() {
+        return window.self !== window.top;
+    }
 });
