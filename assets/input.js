@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const pressStart = () => fakeKeyPress({ code: configIDToCode(keybindsObj['input_player1_start']) });
     const pressSelect = () => fakeKeyPress({ code: configIDToCode(keybindsObj['input_player1_select']) });
     
+    const pressL1 = () => fakeKeyPress({ code: configIDToCode(keybindsObj['input_player1_l']) });
+    const pressR1 = () => fakeKeyPress({ code: configIDToCode(keybindsObj['input_player1_r']) });
+    
     const pressA = () => fakeKeyPress({ code: configIDToCode(keybindsObj['input_player1_a']) });
     const pressB = () => fakeKeyPress({ code: configIDToCode(keybindsObj['input_player1_b']) });
     const pressX = () => fakeKeyPress({ code: configIDToCode(keybindsObj['input_player1_x']) });
@@ -60,6 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addEvent(document.getElementById('input-start'), 'mouse', pressStart);
     addEvent(document.getElementById('input-select'), 'mouse', pressSelect);
+    addEvent(document.getElementById('input-shoulder-left'), 'mouse', pressL1);
+    addEvent(document.getElementById('input-shoulder-right'), 'mouse', pressR1);
 
     addEvent(document.getElementById('input-a'), 'mouse', pressA);
     addEvent(document.getElementById('input-b'), 'mouse', pressB);
@@ -73,6 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addEvent(document.getElementById('input-start'), 'touch', pressStart);
     addEvent(document.getElementById('input-select'), 'touch', pressSelect);
+    addEvent(document.getElementById('input-shoulder-left'), 'touch', pressL1);
+    addEvent(document.getElementById('input-shoulder-right'), 'touch', pressR1);
 
     addEvent(document.getElementById('input-a'), 'touch', pressA);
     addEvent(document.getElementById('input-b'), 'touch', pressB);
