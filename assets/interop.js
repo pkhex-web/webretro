@@ -1,5 +1,19 @@
 // When the iframe is ready to receive messages
 window.addEventListener('DOMContentLoaded', () => {
+    // intercept stderr
+    if (Module && "printErr" in Module) {
+        const originalPrintErr = Module.printErr;
+        Module.printErr = (text) => {
+            // if we detect that libretro has synced the save data, we can now save the save data to IndexedDB
+            if (/\[libretro INFO\] GBA Savedata: Savedata synced/.test(text)) {
+                setTimeout(() => {
+                    Module._cmd_savefiles()
+                })
+            }
+            originalPrintErr(text);
+        }
+    }
+
     window.parent.postMessage('iframe-ready', '*');
 });
 
@@ -21,8 +35,10 @@ function loadGame(saveFile, romFile) {
     // Convert save file to SRM as this is the only extension recognized by RetroArch
     saveFile.name = saveFile.name.replace('.sav', '.srm');
 
-    loadSave(saveFile, romFile.name);
+    const saveKey = loadSave(saveFile, romFile.name);
     loadRom(romFile);
+    
+    watchForSaveChanges(saveKey);
 }
 
 function loadSave(saveFile, romName) {
@@ -32,7 +48,10 @@ function loadSave(saveFile, romName) {
     }
 
     romName = romName.split("/").slice(-1)[0].split(".")[0]
-    setIdbItem("RetroArch_saves_" + romName, [{ ext: "." + data.name.split(".").slice(-1)[0], dir: "", data: new Uint8Array(data.data) }]);
+    const saveKey = `RetroArch_saves_${romName}`;
+    setIdbItem(saveKey, [{ ext: "." + data.name.split(".").slice(-1)[0], dir: "", data: new Uint8Array(data.data) }]);
+
+    return saveKey;
 }
 
 function loadRom(romFile) {
@@ -77,4 +96,54 @@ function readyForInterop(files) {
         startButton.style.display = "none";
         initFromData(files);
     }
+}
+
+let saveChangesWatcher;
+async function watchForSaveChanges(saveKey) {
+    if (saveChangesWatcher) clearInterval(saveChangesWatcher);
+
+    let saveData = (await getIdbItem(saveKey))[0]?.data;
+    let lastChecksum = crc32(saveData);
+
+    setInterval(async () => {
+        let saveData = (await getIdbItem(saveKey))[0]?.data;
+        let newChecksum = crc32(saveData);
+
+        if (newChecksum !== lastChecksum) {
+            lastChecksum = newChecksum;
+            window.parent.postMessage({ type: 'new_save_available', bytes: saveData }, '*');
+        }
+    }, 250)
+}
+
+const table = (function () {
+    let values = new Int32Array(256);
+    let value_nr = 0;
+    while (value_nr < 256) {
+        let c = value_nr;
+        let iteration = 0;
+        while (iteration < 8) {
+            c = (
+                c & 1
+                ? 0xEDB88320 ^ (c >>> 1)
+                : c >>> 1
+            );
+            iteration += 1;
+        }
+        values[value_nr] = c;
+        value_nr += 1;
+    }
+    return values;
+}());
+
+function crc32(byte_array, checksum = 0) {
+    checksum ^= 0xFFFFFFFF;
+    let byte_nr = 0;
+    while (byte_nr < byte_array.length) {
+        checksum = (checksum >>> 8) ^ table[
+            (checksum ^ byte_array[byte_nr]) & 0xFF
+        ];
+        byte_nr += 1;
+    }
+    return checksum ^ 0xFFFFFFFF;
 }

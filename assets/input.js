@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const isMobile = () => /Mobi|Android/i.test(navigator.userAgent);
     const toggleInputs = () => {
-        console.log(navigator.userAgent);
         if (isMobile()) {
             document.getElementById('inputs').style.display = 'flex';
         } else {
