@@ -28,22 +28,36 @@ window.addEventListener('message', (event) => {
 
     switch (data.type) {
         case 'load_game':
-            loadGame(data.saveFile, data.romFile);
+            loadGame(data);
             break;
     }
 });
 
-function loadGame(saveFile, romFile) {
+function loadGame(loadGameArguments) {
+    const saveFile = loadGameArguments.saveFile;
+    const romFile = loadGameArguments.romFile;
+
+    initRetroarchConfiguration(loadGameArguments);
+    fixSaveExtension(saveFile)
+
+    const saveKey = loadSave(saveFile, romFile.name);
+    loadRom(romFile);
+
+    watchForSaveChanges(saveKey);
+}
+
+function fixSaveExtension(saveFile) {
     // Convert save file to SRM as this is the only extension recognized by RetroArch
     if (!saveFile.name.includes(".") || saveFile.name.split('.').length !== 3) {
         saveFile.name = `${saveFile.name}.srm`
     }
     saveFile.name = saveFile.name.replace(/\.[^/.]+$/, '.srm');
+}
 
-    const saveKey = loadSave(saveFile, romFile.name);
-    loadRom(romFile);
-    
-    watchForSaveChanges(saveKey);
+function initRetroarchConfiguration(loadGameArguments) {
+    if (loadGameArguments.showFrameCount) {
+        extraConfig += 'framecount_show = "true"\n';
+    }
 }
 
 function loadSave(saveFile, romName) {
@@ -149,8 +163,8 @@ const table = (function () {
         while (iteration < 8) {
             c = (
                 c & 1
-                ? 0xEDB88320 ^ (c >>> 1)
-                : c >>> 1
+                    ? 0xEDB88320 ^ (c >>> 1)
+                    : c >>> 1
             );
             iteration += 1;
         }
