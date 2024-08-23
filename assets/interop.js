@@ -1,5 +1,5 @@
 // When the iframe is ready to receive messages
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     // intercept stderr
     if (Module && "printErr" in Module) {
         const originalPrintErr = Module.printErr;
@@ -14,6 +14,8 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    await resourcesReady();
+    console.log('Interop resources are ready');
     window.parent.postMessage('iframe-ready', '*');
 });
 
@@ -117,6 +119,25 @@ async function watchForSaveChanges(saveKey) {
             window.parent.postMessage({ type: 'new_save_available', bytes: saveData }, '*');
         }
     }, 250)
+}
+
+function resourcesReady() {
+    return new Promise((resolve, reject) => {
+        const checkIdbInstance = setInterval(() => {
+            if (wIdb !== null) {
+                console.log('IndexedDB instance is ready');
+                clearInterval(checkIdbInstance);
+                resolve();  // Resolve the promise when idbInstance is ready
+            }
+        }, 100);  // Check every 100ms
+
+        setTimeout(() => {
+            if (wIdb === null) {
+                clearInterval(checkIdbInstance);
+                reject(new Error('IndexedDB initialization timed out'));
+            }
+        }, 10000); // Timeout after 10 seconds
+    });
 }
 
 const table = (function () {
