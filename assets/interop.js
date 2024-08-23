@@ -33,7 +33,10 @@ window.addEventListener('message', (event) => {
 
 function loadGame(saveFile, romFile) {
     // Convert save file to SRM as this is the only extension recognized by RetroArch
-    saveFile.name = saveFile.name.replace('.sav', '.srm');
+    if (!saveFile.name.includes(".") || saveFile.name.split('.').length !== 3) {
+        saveFile.name = `${saveFile.name}.srm`
+    }
+    saveFile.name = saveFile.name.replace(/\.[^/.]+$/, '.srm');
 
     const saveKey = loadSave(saveFile, romFile.name);
     loadRom(romFile);
