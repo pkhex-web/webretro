@@ -201,6 +201,22 @@ it's important to note that cores that use different linker settings will need t
 * Pthreads (`melonds` if built with thread support) (compile + link time)
 * Asyncify (`mupen64plus_next`, `parallel_n64`) (link time)
 
+#### Important note on bc files and newer versions of emscripten
+
+THe output of compiling a core, will always be a `.bc` file, but that's not parsable anymore from emscripten build when compiling the link with RetroArch in the next step (Build RetroArch)
+
+The solution is to rename the file extension to `.a` and copying it over to the folder `RetroArch/dist-scripts`
+
+- RetroArch repository, file `Makefile.emscriptem`, change:
+
+from: `line 141: libretro = libretro_emscripten.bc`
+to: `line 141: libretro = libretro_emscripten.a`
+
+- RetroArch repository, file `dist-cores.sh`, change
+
+from: `line 64: EXT=bc`
+to: `line 64: EXT=a`
+
 ### Build RetroArch
 
 1. CD into `RetroArch/dist-scripts`
